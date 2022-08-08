@@ -1,0 +1,17 @@
+useDynLib(ifs)
+
+
+export(IFSM)
+export(IFS)
+export(ifs)
+export(ifs.FT)
+export(ifsm.cf)
+export(ifsm.setQF)
+export(ifsm.w.maps)
+export(ifsp.cf)
+export(ifsp.setQF)
+export(ifsp.w.maps)
+export(IFS.pf.FT)
+export(IFS.df.FT)
+
+importFrom("stats", "constrOptim", "optim", "quantile", "runif")

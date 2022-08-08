@@ -1,0 +1,10 @@
+Package: ifs
+Version: 0.1.6
+Title: Iterated Function Systems
+Author: S. M. Iacus
+Date: 2022-08-02
+Maintainer: Stefano M. Iacus <siacus@iq.harvard.edu>
+Description: Iterated Function Systems Estimator.
+License: GPL (>= 2)
+NeedsCompilation: yes
+Packaged: 2015-08-21 21:41:31 UTC; jago
