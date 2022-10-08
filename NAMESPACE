@@ -1,5 +1,4 @@
-useDynLib(ifs)
-
+useDynLib(ifs, .registration = TRUE)
 
 export(IFSM)
 export(IFS)

@@ -1,0 +1,11 @@
+v 0.1.9 * 
+* added reference to DESCRIPTION file
+
+v 0.1.8
+* removed a few C compiler warnings
+
+v 0.1.7
+* fixed the "Found no call to: ‘R_useDynamicSymbols’" warning
+* fixed Escaped LaTeX specials: \^ in ifsm.w.maps.Rd
+* fixed "use of bitwise '&' with boolean operands" warning
+* changed maintainer email

@@ -546,79 +546,80 @@ SEXP ifs_ft(SEXP x, SEXP p, SEXP s, SEXP a, SEXP k)
 
 SEXP ifs_setQF(SEXP mu, SEXP s, SEXP a, SEXP n)
 {
-  SEXP ans, names, Q, b, A;
-  int m, *nc, ndim, mdim, i, j, ncs, nu, k;
+    SEXP ans, names, Q, b, A;
+    int m, *nc, ndim, mdim, i, j, ncs, nu, k;
   
-  if(!isNumeric(mu)) error("`mu' must be numeric");
-  if(!isNumeric(s)) error("`s' must be numeric");
-  if(!isNumeric(a)) error("`a' must be numeric");
-  if(!isInteger(n)) error("`n' must be an integer");
+    if(!isNumeric(mu)) error("`mu' must be numeric");
+    if(!isNumeric(s)) error("`s' must be numeric");
+    if(!isNumeric(a)) error("`a' must be numeric");
+    if(!isInteger(n)) error("`n' must be an integer");
  
-  PROTECT(mu = AS_NUMERIC(mu));
-  PROTECT(s = AS_NUMERIC(s));
-  PROTECT(a = AS_NUMERIC(a));
-  PROTECT(n = AS_INTEGER(n));
+    PROTECT(mu = AS_NUMERIC(mu));
+    PROTECT(s = AS_NUMERIC(s));
+    PROTECT(a = AS_NUMERIC(a));
+    PROTECT(n = AS_INTEGER(n));
   
-  m = LENGTH(mu); 
-  nc = INTEGER_POINTER(n);
-  ndim = *nc;
-  mdim = m-1;
+    m = LENGTH(mu);
+    nc = INTEGER_POINTER(n);
+    ndim = *nc;
+    mdim = m-1;
   
-  if(mdim < ndim) error("`n' length is too high with respect to `mu' one");
+    if(mdim < ndim)
+        error("`n' length is too high with respect to `mu' one");
 
-  cs = NUMERIC_POINTER(s);
-  ca = NUMERIC_POINTER(a);
-  mm = NUMERIC_POINTER(mu);
+    cs = NUMERIC_POINTER(s);
+    ca = NUMERIC_POINTER(a);
+    mm = NUMERIC_POINTER(mu);
 
-  if( (ncs = LENGTH(s)) != LENGTH(a) )
-   error("`a' and `s' must have same length");
+    if( (ncs = LENGTH(s)) != LENGTH(a) )
+        error("`a' and `s' must have same length");
   
-  PROTECT(A = allocMatrix(REALSXP, mdim, ndim));
+    PROTECT(A = allocMatrix(REALSXP, mdim, ndim));
   
-  for (i = 0; i < mdim; i++)
-   for (j = 0; j < ndim; j++)
-	REAL(A)[i + j * mdim] = 0.0;
+    for (i = 0; i < mdim; i++)
+        for (j = 0; j < ndim; j++)
+            REAL(A)[i + j * mdim] = 0.0;
 
-  for(nu=0; nu < mdim; nu++)
-   for(i=0; i< ndim ;i++)
-    for(k=0; k <= nu+1; k++) 
-     REAL(A)[nu + i * mdim] += choose((double)(nu+1.),(double)k) * R_pow(cs[i],(double)k) * R_pow(ca[i],(double)(nu+1-k)) * mm[k];
+    for(nu=0; nu < mdim; nu++)
+        for(i=0; i< ndim ;i++)
+            for(k=0; k <= nu+1; k++)
+                REAL(A)[nu + i * mdim] += choose((double)(nu+1.),(double)k) * R_pow(cs[i],(double)k) * R_pow(ca[i],(double)(nu+1-k)) * mm[k];
+    
+    PROTECT(ans = allocVector(VECSXP,3));
+    PROTECT(names = allocVector(STRSXP, 3));
+    SET_STRING_ELT(names, 0, mkChar("Q"));
+    SET_STRING_ELT(names, 1, mkChar("b"));
+    SET_STRING_ELT(names, 2, mkChar("A"));
 
-   PROTECT(ans = allocVector(VECSXP,3));
-   PROTECT(names = allocVector(STRSXP, 3));
-   SET_STRING_ELT(names, 0, mkChar("Q"));
-   SET_STRING_ELT(names, 1, mkChar("b"));
-   SET_STRING_ELT(names, 2, mkChar("A"));
+    SET_VECTOR_ELT(ans, 0, PROTECT(Q = allocMatrix(REALSXP, ndim, ndim)));
 
-   SET_VECTOR_ELT(ans, 0, PROTECT(Q = allocMatrix(REALSXP, ndim, ndim)));
-
-   for (i = 0; i < ndim; i++)
-    for (j = 0; j < ndim; j++)
-  	 REAL(Q)[i + j * ndim] = 0.0;
+    for (i = 0; i < ndim; i++)
+        for (j = 0; j < ndim; j++)
+            REAL(Q)[i + j * ndim] = 0.0;
 
 
-   for(i=0; i < ndim ; i++)
-    for(j=0; j < ndim ; j++)
-     for(nu=0; nu < mdim ; nu++) 
-      REAL(Q)[i + j * ndim] += REAL(A)[nu + i * mdim] *  REAL(A)[nu + j * mdim] / R_pow((double)(nu+1),2.);
+    for(i=0; i < ndim ; i++)
+        for(j=0; j < ndim ; j++)
+            for(nu=0; nu < mdim ; nu++)
+                REAL(Q)[i + j * ndim] += REAL(A)[nu + i * mdim] *  REAL(A)[nu + j * mdim] / R_pow((double)(nu+1),2.);
 
-  SET_VECTOR_ELT(ans, 1, PROTECT(b = allocVector(REALSXP, ndim)));
-
-  for(i=0; i < ndim ; i++)
-   REAL(b)[i] = 0.0;
+    SET_VECTOR_ELT(ans, 1, PROTECT(b = allocVector(REALSXP, ndim)));
+    
+    for(i=0; i < ndim ; i++)
+        REAL(b)[i] = 0.0;
    
-  for(i=0; i < ndim ; i++){
-   for(nu=0; nu < mdim ; nu++) 
-      REAL(b)[i] += mm[nu+1] * REAL(A)[nu + i * mdim] / R_pow((double)(nu+1),2.);
-   REAL(b)[i] = -2.0 * REAL(b)[i]; 
-  }
-   
-  SET_VECTOR_ELT(ans, 2, A);
+    for(i=0; i < ndim ; i++){
+        for(nu=0; nu < mdim ; nu++)
+            REAL(b)[i] += mm[nu+1] * REAL(A)[nu + i * mdim] / R_pow((double)(nu+1),2.);
+        REAL(b)[i] = -2.0 * REAL(b)[i];
+    }
+    
+    SET_VECTOR_ELT(ans, 2, A);
  
-  setAttrib(ans, R_NamesSymbol, names);
+    setAttrib(ans, R_NamesSymbol, names);
   
-  UNPROTECT(9);
-  return(ans);
+    UNPROTECT(9);
+    return(ans);
 }
 
 
@@ -653,117 +654,118 @@ double proc(double t, double *X, int nx);
 
 SEXP ifsm_setQF(SEXP X, SEXP s, SEXP a)
 {
-  SEXP ans, names, Q, b, mids, L1, L2, M1;
-  int na, ns, n, N, i, j, ncs, nx;
-  double l2=0, l1=0, m1=0, *xx;
-  double tmin, tmax, Dt, t, S, tmp;
+    SEXP ans, names, Q, b, mids, L1, L2, M1;
+    int na, ns, n, N, i, j, ncs, nx;
+ //   double l2=0, l1=0, m1=0, *xx;
+    double l2=0, l1=0, m1=0;
+    double tmin, tmax, Dt, t, S, tmp;
 
   
-  if(!isNumeric(X)) error("`X' must be numeric");
-  if(!isNumeric(s)) error("`s' must be numeric");
-  if(!isNumeric(a)) error("`a' must be numeric");
+    if(!isNumeric(X)) error("`X' must be numeric");
+    if(!isNumeric(s)) error("`s' must be numeric");
+    if(!isNumeric(a)) error("`a' must be numeric");
  
-  PROTECT(X = AS_NUMERIC(X));
-  PROTECT(s = AS_NUMERIC(s));
-  PROTECT(a = AS_NUMERIC(a));
+    PROTECT(X = AS_NUMERIC(X));
+    PROTECT(s = AS_NUMERIC(s));
+    PROTECT(a = AS_NUMERIC(a));
   
-  nx = LENGTH(X); 
-  na = LENGTH(a);
-  ns = LENGTH(s);
+    nx = LENGTH(X);
+    na = LENGTH(a);
+    ns = LENGTH(s);
 
-  if( na != ns )
-   error("`a' and `s' must have same length");
+    if( na != ns )
+        error("`a' and `s' must have same length");
 
-  n = na;
-  N = 2*n;
+    n = na;
+    N = 2*n;
   
-  cs = NUMERIC_POINTER(s);
-  ca = NUMERIC_POINTER(a);
-  xx = NUMERIC_POINTER(X);
+    cs = NUMERIC_POINTER(s);
+    ca = NUMERIC_POINTER(a);
+    //xx = NUMERIC_POINTER(X);
 
-  if( (ncs = LENGTH(s)) != LENGTH(a) )
-   error("`a' and `s' must have same length");
+    if( (ncs = LENGTH(s)) != LENGTH(a) )
+        error("`a' and `s' must have same length");
   
-   PROTECT(mids = allocVector(REALSXP,nx));
-   PROTECT(ans = allocVector(VECSXP,5));
-   PROTECT(names = allocVector(STRSXP, 5));
-   SET_STRING_ELT(names, 0, mkChar("Q"));
-   SET_STRING_ELT(names, 1, mkChar("b"));
-   SET_STRING_ELT(names, 2, mkChar("L1"));
-   SET_STRING_ELT(names, 3, mkChar("L2"));
-   SET_STRING_ELT(names, 4, mkChar("M1"));
+    PROTECT(mids = allocVector(REALSXP,nx));
+    PROTECT(ans = allocVector(VECSXP,5));
+    PROTECT(names = allocVector(STRSXP, 5));
+    SET_STRING_ELT(names, 0, mkChar("Q"));
+    SET_STRING_ELT(names, 1, mkChar("b"));
+    SET_STRING_ELT(names, 2, mkChar("L1"));
+    SET_STRING_ELT(names, 3, mkChar("L2"));
+    SET_STRING_ELT(names, 4, mkChar("M1"));
 
-   SET_VECTOR_ELT(ans, 0, PROTECT(Q = allocMatrix(REALSXP, N, N)));
+    SET_VECTOR_ELT(ans, 0, PROTECT(Q = allocMatrix(REALSXP, N, N)));
 
-   for (i = 0; i < N; i++)
-    for (j = 0; j < N; j++)
-  	 REAL(Q)[i + j * N] = 0.0;
+    for (i = 0; i < N; i++)
+        for (j = 0; j < N; j++)
+            REAL(Q)[i + j * N] = 0.0;
 
-   for(i=0; i<nx-1; i++){
-	tmin = 0.0;
-	tmax = 1.0;
-	Dt = (tmax-tmin)/100.0;
-	t = tmin+Dt/2.0;
-	while(t < tmax){
-		tmp = proc(t, REAL(X), nx);
-		l2 += Dt*tmp*tmp;
-		m1 += Dt*tmp;
-		l1 += Dt*fabs(tmp);
-		t += Dt;
-	}
-   }
-
-   for(i=0; i < n ; i++){
-    for(j=i; j < n ; j++){
-		tmin = max(REAL(a)[i],REAL(a)[j]);
-		tmax = min(REAL(a)[i]+REAL(s)[i],REAL(a)[j]+REAL(s)[j]);
-		Dt = (tmax-tmin)/100.0;
-		t = tmin+Dt/2.0;
-		S = 0.0;
-		while(t < tmax){
-			S += Dt*proc((t-REAL(a)[i])/REAL(s)[i], REAL(X), nx)*proc((t-REAL(a)[j])/REAL(s)[j], REAL(X), nx);
-			t += Dt;
-		}
-		REAL(Q)[i + j * N] = S;
-		REAL(Q)[j + i * N] = S;
+    for(i=0; i<nx-1; i++){
+        tmin = 0.0;
+        tmax = 1.0;
+        Dt = (tmax-tmin)/100.0;
+        t = tmin+Dt/2.0;
+        while(t < tmax){
+            tmp = proc(t, REAL(X), nx);
+            l2 += Dt*tmp*tmp;
+            m1 += Dt*tmp;
+            l1 += Dt*fabs(tmp);
+            t += Dt;
+        }
     }
-   }
+
+    for(i=0; i < n ; i++){
+        for(j=i; j < n ; j++){
+            tmin = max(REAL(a)[i],REAL(a)[j]);
+            tmax = min(REAL(a)[i]+REAL(s)[i],REAL(a)[j]+REAL(s)[j]);
+            Dt = (tmax-tmin)/100.0;
+            t = tmin+Dt/2.0;
+            S = 0.0;
+            while(t < tmax){
+                S += Dt*proc((t-REAL(a)[i])/REAL(s)[i], REAL(X), nx)*proc((t-REAL(a)[j])/REAL(s)[j], REAL(X), nx);
+                t += Dt;
+            }
+            REAL(Q)[i + j * N] = S;
+            REAL(Q)[j + i * N] = S;
+        }
+    }
    
 
-   for(i=0; i < n ; i++){
-    for(j=i; j < n ; j++){
-		tmin = REAL(a)[j];
-		tmax = REAL(a)[j]+REAL(s)[j];
-		Dt = (tmax-tmin)/100.0;
-		t = tmin+Dt/2.0;
-		S = 0.0;
-		while(t < tmax){
-			S += Dt*proc((t-REAL(a)[i])/REAL(s)[i], REAL(X), nx);
-			t += Dt;
-		}
-		REAL(Q)[i + (j+n) * N] = S;
-		REAL(Q)[(n+i) + j * N] = S;
+    for(i=0; i < n ; i++){
+        for(j=i; j < n ; j++){
+            tmin = REAL(a)[j];
+            tmax = REAL(a)[j]+REAL(s)[j];
+            Dt = (tmax-tmin)/100.0;
+            t = tmin+Dt/2.0;
+            S = 0.0;
+            while(t < tmax){
+                S += Dt*proc((t-REAL(a)[i])/REAL(s)[i], REAL(X), nx);
+                t += Dt;
+            }
+            REAL(Q)[i + (j+n) * N] = S;
+            REAL(Q)[(n+i) + j * N] = S;
+        }
     }
-   }
 
-   for(i=0; i < n ; i++){
-    for(j=i; j < n ; j++){
-	 if((REAL(s)[i] + REAL(a)[i] > REAL(a)[j]) && (REAL(a)[i]< REAL(a)[j]+REAL(s)[j])){
-		tmin = max(REAL(a)[i],REAL(a)[j]);
-		tmax = min(REAL(a)[i]+REAL(s)[i],REAL(a)[j]+REAL(s)[j]);
-		REAL(Q)[(n+i) + (j+n) * N] = tmax-tmin;
-	 }
+    for(i=0; i < n ; i++){
+        for(j=i; j < n ; j++){
+            if((REAL(s)[i] + REAL(a)[i] > REAL(a)[j]) && (REAL(a)[i]< REAL(a)[j]+REAL(s)[j])){
+                tmin = max(REAL(a)[i],REAL(a)[j]);
+                tmax = min(REAL(a)[i]+REAL(s)[i],REAL(a)[j]+REAL(s)[j]);
+                REAL(Q)[(n+i) + (j+n) * N] = tmax-tmin;
+            }
+        }
     }
-   }
 
 
-  SET_VECTOR_ELT(ans, 1, PROTECT(b = allocVector(REALSXP, N)));
+    SET_VECTOR_ELT(ans, 1, PROTECT(b = allocVector(REALSXP, N)));
 
-  for(i=0; i < N ; i++)
-   REAL(b)[i] = 0.0;
+    for(i=0; i < N ; i++)
+        REAL(b)[i] = 0.0;
        
-   for(i=0; i < n ; i++){
-		tmin = 0.0;
+    for(i=0; i < n ; i++){
+        tmin = 0.0;
 		tmax = 1.0;
 		Dt = (tmax-tmin)/100.0;
 		t = tmin+Dt/2.0;
@@ -790,18 +792,18 @@ SEXP ifsm_setQF(SEXP X, SEXP s, SEXP a)
     }
    
 
-  SET_VECTOR_ELT(ans, 2, PROTECT(L1 = allocVector(REALSXP, 1)));
-  REAL(L1)[0] = l1;
+    SET_VECTOR_ELT(ans, 2, PROTECT(L1 = allocVector(REALSXP, 1)));
+    REAL(L1)[0] = l1;
 
-  SET_VECTOR_ELT(ans, 3, PROTECT(L2 = allocVector(REALSXP, 1)));
-  REAL(L2)[0] = l2;
+    SET_VECTOR_ELT(ans, 3, PROTECT(L2 = allocVector(REALSXP, 1)));
+    REAL(L2)[0] = l2;
   
-  SET_VECTOR_ELT(ans, 4, PROTECT(M1 = allocVector(REALSXP, 1)));
-  REAL(M1)[0] = m1;
-  setAttrib(ans, R_NamesSymbol, names);
+    SET_VECTOR_ELT(ans, 4, PROTECT(M1 = allocVector(REALSXP, 1)));
+    REAL(M1)[0] = m1;
+    setAttrib(ans, R_NamesSymbol, names);
   
-  UNPROTECT(11);
-  return(ans);
+    UNPROTECT(11);
+    return(ans);
 }
 
 double proc(double t, double *X, int nx){
@@ -824,6 +826,7 @@ void
 R_init_ifs(DllInfo *info)
 {
     R_registerRoutines(info, R_CDef, NULL, NULL, NULL);
+    R_useDynamicSymbols(info, TRUE);
 }
 
 
