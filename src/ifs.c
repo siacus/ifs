@@ -845,7 +845,9 @@ double feval(double x, SEXP f, SEXP rho)
 {
     double val;
     SEXP R_fcall;    
-    defineVar(install("x"), mkans(x), rho);
+ //   defineVar(install("x"), mkans(x), rho);
+    SEXP sx = install("x");
+    defineVar(sx, mkans(x), rho);
     PROTECT(R_fcall = lang2(f, mkans(x)));
     val = *NUMERIC_POINTER(eval(R_fcall, rho));
     UNPROTECT(1);

@@ -1,3 +1,6 @@
+v 0.1.10
+* fixed memory protection in feval, ifs.c
+
 v 0.1.9
 * added reference to DESCRIPTION file
 
